@@ -2,7 +2,7 @@
 地址补全智能体 - 基于RAG的缺失层级补全
 核心能力：推断并补全缺失的行政区划和地址层级
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from typing import Dict, Any
 from app.core import settings, get_logger
 from app.resources.tools.segment_tool import segment_address
@@ -86,13 +86,10 @@ def make_completion_agent() -> Agent:
     agent = Agent(
         name="AddressCompletion",
         description="地址补全智能体 - 基于RAG补全缺失层级",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=COMPLETION_SYSTEM_PROMPT,
         tools=[segment_address],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -143,7 +140,7 @@ RAG检索到的相似地址（Top5）：
 5. 提供置信度评估和备选方案
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "original": address,

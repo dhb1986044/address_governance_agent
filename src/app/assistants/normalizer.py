@@ -2,7 +2,7 @@
 地址规范化智能体 - 文本预处理和格式规范
 核心能力：清洗和规范化地址文本格式
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from app.core import settings, get_logger
 from app.resources.tools.text_cleaner import clean_address_text
 
@@ -71,13 +71,10 @@ def make_normalizer_agent() -> Agent:
     agent = Agent(
         name="AddressNormalizer",
         description="地址规范化智能体 - 文本预处理",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=NORMALIZER_SYSTEM_PROMPT,
         tools=[clean_address_text],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -109,7 +106,7 @@ def normalize_address(address: str) -> dict:
 6. 列出所有的处理步骤
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "original": address,

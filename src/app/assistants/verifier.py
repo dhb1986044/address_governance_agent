@@ -2,7 +2,7 @@
 地址校验智能体 - 三重幻觉抑制机制
 核心能力：验证地址的真实性、一致性、几何约束
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from typing import Dict, Any
 from app.core import settings, get_logger
 from app.resources.tools.geocode_tool import geocode_address
@@ -123,13 +123,10 @@ def make_verifier_agent() -> Agent:
     agent = Agent(
         name="AddressVerifier",
         description="地址校验智能体 - 三重幻觉抑制机制",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=VERIFIER_SYSTEM_PROMPT,
         tools=[geocode_address],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -196,7 +193,7 @@ def verify_address(
 详细说明所有发现的问题和置信度评估。
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "address": address,

@@ -2,7 +2,7 @@
 地址空间化智能体 - 地址到坐标的转换
 核心能力：将标准化地址转换为精确的地理坐标（经纬度）
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from app.core import settings, get_logger
 from app.resources.tools.geocode_tool import geocode_address, reverse_geocode
 
@@ -77,13 +77,10 @@ def make_spatializer_agent() -> Agent:
     agent = Agent(
         name="AddressSpatializer",
         description="地址空间化智能体 - 地址到坐标转换",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=SPATIALIZER_SYSTEM_PROMPT,
         tools=[geocode_address, reverse_geocode],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -116,7 +113,7 @@ def spatialize_address(address: str) -> dict:
 7. 如果有问题，说明具体是什么问题
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "address": address,

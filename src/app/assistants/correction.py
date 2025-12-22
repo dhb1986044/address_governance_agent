@@ -2,7 +2,7 @@
 地址纠错智能体 - AI语义纠错
 核心能力：识别并纠正地址中的错别字、笔误、OCR错误
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from typing import List, Dict, Any
 from app.core import settings, get_logger
 from app.resources.tools.standardize_tool import standardize_address
@@ -90,13 +90,10 @@ def make_correction_agent() -> Agent:
     agent = Agent(
         name="AddressCorrection",
         description="地址纠错智能体 - AI语义纠错",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=CORRECTION_SYSTEM_PROMPT,
         tools=[standardize_address],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -136,7 +133,7 @@ def correct_address(address: str) -> dict:
 6. 评估纠错的置信度
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "original": address,

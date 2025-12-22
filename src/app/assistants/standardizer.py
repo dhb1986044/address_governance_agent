@@ -2,7 +2,7 @@
 地址标准化智能体 - 综合纠错、补全、格式规范化
 核心能力：将任意格式地址转换为标准格式
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from app.core import settings, get_logger
 from app.resources.tools.standardize_tool import standardize_address
 from app.resources.tools.segment_tool import segment_address
@@ -82,13 +82,10 @@ def make_standardizer_agent() -> Agent:
     agent = Agent(
         name="AddressStandardizer",
         description="地址标准化智能体 - 综合纠错、补全、格式规范化",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=STANDARDIZER_SYSTEM_PROMPT,
         tools=[standardize_address, segment_address],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -120,7 +117,7 @@ def standardize(address: str) -> dict:
 6. 输出符合标准格式的完整地址
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     
     return {
         "original": address,

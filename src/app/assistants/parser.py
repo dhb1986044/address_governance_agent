@@ -2,7 +2,7 @@
 地址解析智能体 - 使用丰图18级分词进行结构化解析
 核心能力：将任意格式的中文地址解析为标准的18级层级结构
 """
-from agno import Agent, RunResponse
+from agno.agent import Agent
 from app.core import settings, get_logger
 from app.resources.tools.segment_tool import segment_address
 from app.resources.tools.text_cleaner import clean_address_text
@@ -89,13 +89,10 @@ def make_parser_agent() -> Agent:
     agent = Agent(
         name="AddressParser",
         description="地址解析智能体 - 使用丰图18级分词进行结构化解析",
-        model=f"openai/{settings.LLM_MODEL_ID}",
+        model=f"openai:{settings.LLM_MODEL_ID}",
         instructions=PARSER_SYSTEM_PROMPT,
         tools=[segment_address, clean_address_text],
         markdown=False,
-        show_tool_calls=True,
-        api_key=settings.LLM_API_KEY,
-        base_url=settings.LLM_BASE_URL,
     )
     return agent
 
@@ -124,7 +121,7 @@ def parse_address(address: str) -> dict:
 5. 给出整体置信度评估
 """
     
-    response: RunResponse = agent.run(prompt)
+    response: Any = agent.run(prompt)
     return {
         "address": address,
         "result": response.content,

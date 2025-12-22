@@ -4,7 +4,7 @@
 """
 from typing import Dict, Any, List, Optional
 from enum import Enum
-from agno import Agent
+from agno.agent import Agent
 from app.core import settings, get_logger
 from app.assistants.parser import make_parser_agent
 from app.assistants.normalizer import make_normalizer_agent
