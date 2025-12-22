@@ -51,10 +51,14 @@ class Settings(BaseSettings):
     ES_INDEX_POI: str = "poi_inverted"
     
     # ==================== Embedding模型配置 ====================
-    EMBEDDING_MODEL_ID: str = "bge-m3"
+    EMBEDDING_MODEL_ID: str = "text-embedding-3-small"
     EMBEDDING_API_KEY: str = ""
     EMBEDDING_BASE_URL: str = ""
     EMBEDDING_DIMENSION: int = 768
+    
+    # ==================== 数据库配置 ====================
+    SQLITE_DB_FILE: str = "./data/agents.db"
+    LANCEDB_URI: str = "./data/lancedb"
     
     # ==================== RAG配置 ====================
     RAG_TOP_K: int = 10
