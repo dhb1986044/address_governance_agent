@@ -1,9 +1,10 @@
-# 中文地址治理智能体系统
+# 中文地址治理智能体系统 - 基于 Agno SDK v2.3.20
 
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Agno SDK](https://img.shields.io/badge/agno-v2.3.20-green.svg)](https://github.com/agno-sdk/agno)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-基于LLM+RAG的分层多智能体架构(HMAS)，面向百亿级规模的中文地址治理解决方案。
+基于 **Agno SDK v2.3.20** 最新框架和 LLM+RAG 的分层多智能体架构(HMAS)，面向百亿级规模的中文地址治理解决方案。
 
 ## 📋 项目概述
 
@@ -12,18 +13,19 @@
 ### 核心特性
 
 - **🎯 18级地址解析**：符合GB/T 23705-2009标准，精确解析省/市/区/街道/路/门牌/楼栋/房间等18个层级
-- **🤖 分层多智能体**：HMAS架构，7个专家智能体协同工作
-- **🔍 RAG增强**：百亿级地址知识库，Milvus向量检索 + Elasticsearch全文检索
+- **🤖 分层多智能体**：HMAS架构，7个专家智能体协同工作，基于 Agno SDK v2.3.20 Team API
+- **🔍 RAG增强**：百亿级地址知识库，LanceDB 向量检索
 - **✅ 三重校验**：存在性验证 + 一致性验证 + 几何约束验证，有效抑制LLM幻觉
-- **⚡ 高性能**：支持多线程/多进程并发，漏斗式分级处理（40%规则+30%模型+15%ES+15%LLM）
-- **🌐 多接口**：CLI命令行 + RESTful API + Python SDK
+- **⚡ 高性能**：Workflow API 实现确定性流水线，支持批量并发处理
+- **🌐 多接口**：Typer CLI命令行 + RESTful API + Python SDK
 
-## 🏗️ 架构设计
+## 🏗️ 架构设计 (基于 Agno v2.3.20)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      L1: Orchestrator Agent                         │
+│                      Team: Orchestrator Agent                        │
 │                     (协调者 - 意图识别/任务分发)                      │
+│                     使用 Team API (v2.3.20)                          │
 └─────────────────────────────┬───────────────────────────────────────┘
                               │
         ┌─────────────────────┼─────────────────────┐
@@ -31,6 +33,7 @@
 ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
 │ Parser Agent  │    │ Completion    │    │ Correction    │
 │ (解析)        │    │ Agent(补全)   │    │ Agent(纠错)   │
+│ OpenAIChat    │    │ + SqliteDb    │    │ + History     │
 └───────────────┘    └───────────────┘    └───────────────┘
         │                     │                     │
         ▼                     ▼                     ▼
@@ -41,9 +44,9 @@
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                      L3: Tool Layer (工具层)                         │
+│                      Tool Layer (工具层)                             │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐  │
-│  │丰图18级分词API│ │丰图地理编码API│ │丰图标准化API │ │ RAG检索    │  │
+│  │丰图18级分词API│ │丰图地理编码API│ │丰图标准化API │ │ @tool装饰器│  │
 │  └──────────────┘ └──────────────┘ └──────────────┘ └────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -53,8 +56,9 @@
 ### 环境要求
 
 - Python 3.9+
-- 丰图科技API Key（可选，用于真实API调用）
+- Agno SDK v2.3.20
 - 阿里云DashScope API Key（用于LLM）
+- 丰图科技API Key（可选，用于真实API调用）
 
 ### 安装
 
@@ -63,7 +67,7 @@
 git clone https://github.com/306251708dd-gif/address_governance_agent.git
 cd address_governance_agent
 
-# 安装依赖
+# 安装依赖（使用 Agno v2.3.20）
 pip install -r requirements.txt
 
 # 或使用pip安装（开发模式）
@@ -82,22 +86,19 @@ cp .env.example .env
 nano .env
 ```
 
-### 使用示例
+## 💻 使用示例
 
-#### 1. 命令行接口（CLI）
+### 1. 命令行接口（CLI）- 使用 Typer
 
 ```bash
+# 交互式对话模式（新功能！）
+python -m app.api.cli chat
+
 # 处理单个地址
 python -m app.api.cli process "浙江省杭州市余杭区五常街道文一西路969号"
 
-# 处理单个地址（仅纠错）
-python -m app.api.cli process "杭州市余航区五常街道" --intent correct
-
-# 批量处理CSV文件
-python -m app.api.cli batch input.csv output.csv --workers 20
-
-# 处理多个地址
-python -m app.api.cli multi "地址1" "地址2" "地址3" --output results.json
+# 批量处理文件
+python -m app.api.cli batch input.txt output.json
 
 # 查看配置
 python -m app.api.cli config
@@ -106,35 +107,61 @@ python -m app.api.cli config
 python -m app.api.cli test
 ```
 
-#### 2. Python API
+### 2. Python API - 使用 Agno v2.3.20
+
+#### 使用 Team API（推荐）
 
 ```python
-from app.workflows.address_pipeline import AddressPipeline
+from app.teams.address_governance_team import make_address_governance_team
 
-# 创建流水线
-pipeline = AddressPipeline()
+# 创建地址治理团队
+team = make_address_governance_team()
 
-# 处理单个地址
-result = pipeline.process_single("浙江省杭州市余杭区五常街道文一西路969号")
+# 流式输出处理结果
+team.print_response(
+    "请完成以下地址的全流程治理：浙江省杭州市余杭区五常街道文一西路969号",
+    stream=True,
+    markdown=True
+)
 
-print(f"原始地址: {result.original_address}")
-print(f"最终地址: {result.final_address}")
-print(f"置信度: {result.confidence:.2f}")
-print(f"状态: {result.status}")
-
-# 批量处理
-addresses = [
-    "文一西路969号5号楼",
-    "杭州市余航区五常街道",
-    "阿里西溪园区B区"
-]
-
-results = pipeline.process_batch(addresses)
-for r in results:
-    print(f"{r.original_address} → {r.final_address}")
+# 或获取结果
+response = team.run("请完成地址治理：文一西路969号")
+print(response.content)
 ```
 
-#### 3. REST API服务
+#### 使用 Workflow API
+
+```python
+from app.workflows.address_pipeline import make_address_pipeline
+
+# 创建流水线
+pipeline = make_address_pipeline()
+
+# 流式输出
+pipeline.print_response("文一西路969号5号楼", stream=True)
+
+# 或获取结果
+response = pipeline.run(input="文一西路969号5号楼")
+print(response.content)
+```
+
+#### 使用单个 Agent
+
+```python
+from app.assistants.parser import make_parser_agent
+
+# 创建解析智能体
+parser = make_parser_agent()
+
+# 流式输出
+parser.print_response("请解析以下地址：文一西路969号", stream=True)
+
+# 或获取结果
+response = parser.run("请解析以下地址：文一西路969号")
+print(response.content)
+```
+
+### 3. REST API服务
 
 ```bash
 # 启动API服务
@@ -146,49 +173,26 @@ uvicorn app.api.server:app --host 0.0.0.0 --port 8000
 
 访问API文档：http://localhost:8000/docs
 
-**API示例**：
-
-```bash
-# 处理单个地址
-curl -X POST "http://localhost:8000/api/v1/address/process" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "address": "浙江省杭州市余杭区五常街道文一西路969号",
-    "intent": "full"
-  }'
-
-# 批量处理（同步）
-curl -X POST "http://localhost:8000/api/v1/address/batch" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "addresses": ["地址1", "地址2", "地址3"],
-    "async_mode": false
-  }'
-
-# 健康检查
-curl "http://localhost:8000/health"
-```
-
-## 📁 项目结构
+## 📁 项目结构（Agno v2.3.20 规范）
 
 ```
 src/app/
 ├── core/                      # 基础设施层
-│   ├── config.py              # 配置管理
+│   ├── config.py              # 配置管理（Settings）
 │   ├── logger.py              # 日志工具
 │   └── fengtu_client.py       # 丰图API客户端
 ├── resources/                 # 共享资源层
-│   ├── tools/                 # 工具集
-│   │   ├── segment_tool.py    # 18级分词
-│   │   ├── geocode_tool.py    # 地理编码
-│   │   ├── standardize_tool.py # 标准化
-│   │   ├── text_cleaner.py    # 文本清洗
-│   │   └── similarity_tool.py # 相似度计算
-│   └── knowledge/             # 知识库
+│   ├── tools/                 # 工具集（使用 @tool 装饰器）
+│   │   ├── segment_tool.py    # 18级分词工具
+│   │   ├── geocode_tool.py    # 地理编码工具
+│   │   ├── standardize_tool.py # 标准化工具
+│   │   ├── text_cleaner.py    # 文本清洗工具
+│   │   └── similarity_tool.py # 相似度计算工具
+│   └── knowledge/             # 知识库（Knowledge + LanceDb）
 │       ├── address_knowledge.py # 地址库（RAG）
 │       ├── poi_knowledge.py   # POI库
 │       └── admin_division.py  # 行政区划
-├── assistants/                # 智能体层
+├── assistants/                # 智能体层（使用 Agent API）
 │   ├── parser.py              # 解析智能体
 │   ├── normalizer.py          # 规范化智能体
 │   ├── completion.py          # 补全智能体
@@ -196,19 +200,87 @@ src/app/
 │   ├── standardizer.py        # 标准化智能体
 │   ├── spatializer.py         # 空间化智能体
 │   └── verifier.py            # 校验智能体
-├── teams/                     # 协作层
+├── teams/                     # 协作层（使用 Team API）
 │   └── address_governance_team.py # HMAS团队
-├── workflows/                 # 工作流层
+├── workflows/                 # 工作流层（使用 Workflow API）
 │   ├── address_pipeline.py    # 治理流水线
 │   └── batch_processor.py     # 批量处理器
 └── api/                       # 接口层
-    ├── cli.py                 # CLI接口
+    ├── cli.py                 # Typer CLI接口
     └── server.py              # FastAPI服务
 ```
 
-## 🧪 测试用例
+## 🔧 Agno SDK v2.3.20 核心特性
 
-系统提供了多种类型的测试地址：
+### Agent 创建
+
+```python
+from agno.agent import Agent
+from agno.models.openai import OpenAIChat
+from agno.db.sqlite import SqliteDb
+
+agent = Agent(
+    name="Agent Name",
+    id="agent-id",
+    model=OpenAIChat(id="gpt-4o", api_key="...", base_url="..."),
+    tools=[tool1, tool2],
+    instructions=["指令1", "指令2"],
+    description="Agent 描述",
+    db=SqliteDb(db_file="agents.db"),
+    add_history_to_context=True,
+    add_datetime_to_context=True,
+    markdown=True,
+)
+```
+
+### Team 创建
+
+```python
+from agno.team import Team
+
+team = Team(
+    name="Team Name",
+    model=OpenAIChat(id="gpt-4o"),
+    members=[agent1, agent2, agent3],
+    instructions=["团队协作指令"],
+    db=SqliteDb(db_file="teams.db"),
+    show_members_responses=True,
+    retries=3,
+    exponential_backoff=True,
+)
+```
+
+### Workflow 创建
+
+```python
+from agno.workflow import Workflow, Step
+from agno.workflow.step import StepInput, StepOutput
+
+def custom_step(step_input: StepInput) -> StepOutput:
+    return StepOutput(content=f"Processed: {step_input.input}")
+
+workflow = Workflow(
+    name="Workflow Name",
+    steps=[
+        Step(name="Step 1", agent=agent1),
+        custom_step,  # 自定义函数
+        Step(name="Step 3", agent=agent3),
+    ],
+)
+```
+
+### Tool 创建
+
+```python
+from agno.tools import tool
+
+@tool(name="tool_name", description="工具描述")
+def my_tool(param1: str, param2: int = 0) -> dict:
+    """工具的详细说明"""
+    return {"result": "处理结果"}
+```
+
+## 🧪 测试用例
 
 ```python
 test_cases = [
@@ -244,36 +316,6 @@ python -m app.api.cli test
 - [API参考文档](docs/api_reference.md) - 完整的API接口说明
 - [LLM+RAG 地址治理智能体方案](LLM+RAG%20地址治理智能体方案.md) - 研究报告
 
-## 🔧 高级配置
-
-### 分级处理配置
-
-系统采用漏斗式分级处理策略，可在`.env`中配置比例：
-
-```env
-RULE_PROCESS_RATIO=0.40      # 40% 规则引擎
-MODEL_PROCESS_RATIO=0.30     # 30% 轻量模型
-ES_PROCESS_RATIO=0.15        # 15% ES检索
-LLM_PROCESS_RATIO=0.15       # 15% LLM深度推理
-```
-
-### 幻觉抑制配置
-
-```env
-HALLUCINATION_CHECK_ENABLED=true
-CONFIDENCE_THRESHOLD=0.80
-GEOMETRY_CHECK_ENABLED=true
-```
-
-### RAG配置
-
-```env
-RAG_TOP_K=10
-RAG_SCORE_THRESHOLD=0.85
-RAG_RERANK_ENABLED=true
-RAG_RERANK_TOP_K=5
-```
-
 ## 🤝 贡献
 
 欢迎提交Issue和Pull Request！
@@ -289,4 +331,4 @@ MIT License
 
 ---
 
-**基于丰图科技核心能力 | 精度99.8%+ | 百亿级规模**
+**基于 Agno SDK v2.3.20 | 丰图科技核心能力 | 精度99.8%+ | 百亿级规模**
