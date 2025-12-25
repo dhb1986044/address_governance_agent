@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     """系统配置类 - 所有配置从环境变量或.env文件读取"""
     
     # ==================== LLM配置 ====================
-    LLM_MODEL_ID: str = "qwen-plus"
+    LLM_MODEL_ID: str = "glm-4"
     LLM_API_KEY: str = ""
-    LLM_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    LLM_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
     LLM_TEMPERATURE: float = 0.1
     LLM_MAX_TOKENS: int = 2000
     
@@ -51,14 +51,15 @@ class Settings(BaseSettings):
     ES_INDEX_POI: str = "poi_inverted"
     
     # ==================== Embedding模型配置 ====================
-    EMBEDDING_MODEL_ID: str = "text-embedding-3-small"
+    EMBEDDING_MODEL_ID: str = "embedding-3-pro"
     EMBEDDING_API_KEY: str = ""
-    EMBEDDING_BASE_URL: str = ""
-    EMBEDDING_DIMENSION: int = 768
+    EMBEDDING_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
+    EMBEDDING_DIMENSION: int = 1024
     
     # ==================== 数据库配置 ====================
     SQLITE_DB_FILE: str = "./data/agents.db"
     LANCEDB_URI: str = "./data/lancedb"
+    LANCEDB_BOOTSTRAP_ENABLED: bool = True
     
     # ==================== RAG配置 ====================
     RAG_TOP_K: int = 10

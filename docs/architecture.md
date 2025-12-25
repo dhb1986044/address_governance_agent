@@ -114,15 +114,22 @@
 
 ### 4.1 RAG检索策略
 
-**混合检索**：
-1. 语义向量检索（Milvus）：基于BGE-M3模型，检索语义相似地址
-2. 倒排索引检索（Elasticsearch）：基于分词，检索精确匹配地址
-3. 融合排序：RRF（Reciprocal Rank Fusion）融合两路结果
+**混合检索（语义 + 文本 + 空间）**：
+1. 语义向量检索（Milvus）：基于BGE-M3模型生成Embedding，利用GeoHash/H3作为分区键过滤。
+2. 倒排索引检索（Elasticsearch）：分词召回并支持省/市/区等行政约束过滤。
+3. 空间过滤：按中心点/矩形范围过滤结果，对近邻给予距离加权。
+4. 融合排序：RRF（Reciprocal Rank Fusion）融合三路结果，随后用 Cross-Encoder 进行重排序，加入空间距离特征降低异地同名幻觉。
+
+**轻量化验证路径（LanceDB）**：
+- 当 Milvus/ES 不可用时，可用 LanceDB 做本地集成测试，表结构包含 `embedding/tokens/admin` 字段。
+- 语义向量与倒排检索都通过 LanceDB 的向量列 + token 列完成，仍然复用 RRF + rerank 逻辑。
+- 种子数据：包含 2 条 AOI 与 5 条村级样本（来源于需求提供的数据），默认写入 `./data/lancedb/address_knowledge`。
+- 模型/密钥：默认使用智谱 `glm-4`（LLM）与 `embedding-3-pro`（向量），BASE URL `https://open.bigmodel.cn/api/paas/v4`，API Key 通过环境变量 `LLM_API_KEY` 或 `EMBEDDING_API_KEY` 传入。
 
 **参数**：
-- Top-K: 10
+- Top-K: 10（RRF 输入 2x 扩展召回）
 - 相似度阈值: 0.85
-- Rerank: 启用，Top-5
+- Rerank: 启用，Top-5，兼顾文本相似度与空间距离
 
 ### 4.2 三重幻觉抑制机制
 
@@ -163,8 +170,9 @@
 ## 5. 性能优化
 
 ### 5.1 分级路由
-- 简单地址走规则引擎，毫秒级响应
-- 复杂地址才使用LLM，合理分配资源
+- 简单地址走 Normalizer → Parser，毫秒级响应
+- 中等地址补全/纠错并行，标准化后交由 Verifier + Spatializer 校验
+- 复杂地址使用 LLM 深度推理，保留 JSON 消息体传递上下文（intent/complexity/constraints）确保可解释与可回溯
 
 ### 5.2 缓存策略
 - 结果缓存：TTL=3600秒

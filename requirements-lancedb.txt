@@ -1,0 +1,2 @@
+# LanceDB 依赖清单（可选）：用于本地验证 LanceDB 集成
+lancedb==0.4.2
