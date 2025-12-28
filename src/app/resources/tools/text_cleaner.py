@@ -9,6 +9,10 @@ from app.core import get_logger
 logger = get_logger(__name__)
 
 
+def clean_address_text_start_logic(address: str) -> Dict[str, Any]:
+    # Placeholder for logic extraction
+    pass
+
 @tool(
     name="clean_address_text",
     description="""清洗和预处理地址文本。
@@ -25,7 +29,13 @@ logger = get_logger(__name__)
 )
 def clean_address_text(address: str) -> Dict[str, Any]:
     """
-    清洗地址文本
+    调用文本清洗逻辑 (Tool Wrapper)
+    """
+    return clean_address_text_logic(address)
+
+def clean_address_text_logic(address: str) -> Dict[str, Any]:
+    """
+    清洗地址文本 (Implementation Logic)
     
     Args:
         address: 原始地址文本

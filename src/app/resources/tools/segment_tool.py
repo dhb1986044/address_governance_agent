@@ -12,41 +12,34 @@ AOI: 兴趣面（跨层级实体）
 """
 from typing import Dict, Any
 from agno.tools import tool
-from app.core import FengtuClient, get_logger
+from app.core import FengtuClient, get_logger, settings
 
 logger = get_logger(__name__)
 
 
-@tool(
-    name="fengtu_segment_address",
-    description="""使用丰图18级分词服务解析中文地址。
-    
-    该工具将任意格式的中文地址解析为遵循GB/T 23705-2009标准的18级结构：
-    - L1-L4: 行政区划（省/市/区/街道）
-    - L5-L7: 基础定位（路/门牌/房间）
-    - L8-L12: 精细定位（辅助路/标志物/子POI/出入口/内部位置）
-    - L13-L18: 补充信息（方位/距离/附加描述/备注/联系信息/其他）
-    - AOI: 兴趣面实体（如小区、园区）
-    
-    返回结构化的分词结果，包括各层级值、置信度、缺失层级等信息。
+def segment_address_logic(raw_address: str) -> Dict[str, Any]:
     """
-)
-def segment_address(raw_address: str) -> Dict[str, Any]:
-    """
-    调用丰图18级分词API解析地址
-    
-    Args:
-        raw_address: 原始地址字符串
-    
-    Returns:
-        Dict: 包含以下字段的字典
-            - segments: List[Dict] 18级分词结果列表
-            - missing_levels: List[str] 缺失的层级列表
-            - confidence: float 整体置信度
-            - need_completion: bool 是否需要补全
+    18级分词逻辑 (Internal)
     """
     logger.info(f"18级分词工具: {raw_address}")
     
+    # Mock logic if API Key is missing
+    if not settings.FENGTU_API_KEY:
+        logger.warning("未配置 FENGTU_API_KEY, 使用模拟(Mock)数据")
+        return {
+            "raw_address": raw_address,
+            "segments": [
+                 {"level": "L1", "name": "省/直辖市", "value": "河北省", "confidence": 1.0},
+                 {"level": "L2", "name": "地级市", "value": "保定市", "confidence": 1.0},
+                 {"level": "L3", "name": "区/县", "value": "满城区", "confidence": 0.9}
+                 # Simple partial mock for testing
+            ],
+            "missing_levels": ["L4", "L6"],
+            "confidence": 0.8,
+            "need_completion": True,
+            "note": "MOCKED USER DATA"
+        }
+
     try:
         client = FengtuClient()
         result = client.segment_address(raw_address)
@@ -78,6 +71,26 @@ def segment_address(raw_address: str) -> Dict[str, Any]:
             "need_completion": False,
             "error": str(e)
         }
+
+@tool(
+    name="fengtu_segment_address",
+    description="""使用丰图18级分词服务解析中文地址。
+    
+    该工具将任意格式的中文地址解析为遵循GB/T 23705-2009标准的18级结构：
+    - L1-L4: 行政区划（省/市/区/街道）
+    - L5-L7: 基础定位（路/门牌/房间）
+    - L8-L12: 精细定位（辅助路/标志物/子POI/出入口/内部位置）
+    - L13-L18: 补充信息（方位/距离/附加描述/备注/联系信息/其他）
+    - AOI: 兴趣面实体（如小区、园区）
+    
+    返回结构化的分词结果，包括各层级值、置信度、缺失层级等信息。
+    """
+)
+def segment_address(raw_address: str) -> Dict[str, Any]:
+    """
+    调用丰图18级分词API解析地址
+    """
+    return segment_address_logic(raw_address)
 
 
 if __name__ == "__main__":

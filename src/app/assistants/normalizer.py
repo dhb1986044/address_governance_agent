@@ -4,7 +4,7 @@
 遵循 Agno SDK v2.3.20 的 Agent 创建规范
 """
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
+from agno.models.openai import OpenAILike
 from agno.db.sqlite import SqliteDb
 
 from app.core import settings, get_logger
@@ -27,6 +27,17 @@ NORMALIZER_INSTRUCTIONS = [
 ]
 
 
+from typing import Optional
+from pydantic import BaseModel, Field
+
+class NormalizationResult(BaseModel):
+    """地址规范化结果"""
+    normalized_text: str = Field(..., description="规范化后的标准地址文本")
+    structure_analysis: str = Field(..., description="对地址结构和层级的分析")
+    poi_detected: Optional[str] = Field(None, description="识别出的POI（兴趣点）或关键地标")
+    corrections_made: list[str] = Field(default_factory=list, description="执行的具体纠错或清洗操作列表")
+
+
 def make_normalizer_agent() -> Agent:
     """
     创建地址规范化智能体
@@ -37,7 +48,7 @@ def make_normalizer_agent() -> Agent:
     return Agent(
         name="地址规范化专家",
         id="address-normalizer",
-        model=OpenAIChat(
+        model=OpenAILike(
             id=settings.LLM_MODEL_ID,
             api_key=settings.LLM_API_KEY,
             base_url=settings.LLM_BASE_URL,
@@ -46,6 +57,7 @@ def make_normalizer_agent() -> Agent:
         tools=[clean_address_text],
         instructions=NORMALIZER_INSTRUCTIONS,
         description=NORMALIZER_DESCRIPTION,
+        output_schema=NormalizationResult,
         db=SqliteDb(db_file=settings.SQLITE_DB_FILE),
         add_history_to_context=True,
         add_datetime_to_context=True,
@@ -71,9 +83,13 @@ def normalize_address(address: str) -> dict:
     
     response = agent.run(prompt)
     
+    # response.content 已经是 NormalizationResult 对象
+    result: NormalizationResult = response.content
+    
     return {
         "original": address,
-        "result": response.content
+        "result": result.normalized_text,
+        "details": result.model_dump()
     }
 
 
@@ -86,7 +102,7 @@ if __name__ == "__main__":
     ]
     
     print("=" * 80)
-    print("测试地址规范化智能体")
+    print("测试地址规范化智能体 (Structured Output)")
     print("=" * 80)
     
     agent = make_normalizer_agent()
@@ -94,4 +110,10 @@ if __name__ == "__main__":
     for addr in test_cases:
         print(f"\n原始地址: {repr(addr)}")
         print("-" * 80)
-        agent.print_response(f"请规范化以下地址的格式：{addr}", stream=True)
+        response = agent.run(f"请规范化以下地址的格式：{addr}")
+        result: NormalizationResult = response.content
+        
+        print(f"规范化文本: {result.normalized_text}")
+        print(f"结构分析:   {result.structure_analysis}")
+        print(f"识别POI:    {result.poi_detected}")
+        print(f"纠错操作:   {result.corrections_made}")

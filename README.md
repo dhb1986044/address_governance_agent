@@ -57,7 +57,7 @@
 
 - Python 3.9+
 - Agno SDK v2.3.20
-- 智谱大模型 API Key（用于 LLM/Embedding，默认 glm-4 + embedding-3-pro）
+- 阿里云DashScope API Key（用于LLM）
 - 丰图科技API Key（可选，用于真实API调用）
 
 ### 安装
@@ -81,7 +81,7 @@ pip install -e .
 cp .env.example .env
 
 # 编辑.env文件，填入必要的API Keys
-# - LLM_API_KEY: 智谱大模型 API Key（可用于 LLM 与向量模型）
+# - LLM_API_KEY: 阿里云DashScope API Key
 # - FENGTU_API_KEY: 丰图科技API Key（可选）
 nano .env
 ```
@@ -307,17 +307,6 @@ test_cases = [
 运行测试：
 
 ```bash
-# 基础用例（默认无需 LanceDB）
-pytest -m "not lancedb"
-
-# 安装并验证 LanceDB（需要能访问外网下载二进制包）
-pip install -r requirements-lancedb.txt \
-    || pip install --no-index --find-links ./wheels lancedb==0.4.2
-
-# LanceDB 集成回归（未安装会自动跳过）
-pytest -m lancedb
-
-# 仅验证 CLI 快速检查
 python -m app.api.cli test
 ```
 

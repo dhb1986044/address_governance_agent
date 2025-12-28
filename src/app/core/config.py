@@ -10,56 +10,30 @@ from pathlib import Path
 class Settings(BaseSettings):
     """系统配置类 - 所有配置从环境变量或.env文件读取"""
     
-    # ==================== LLM配置 ====================
+    # ==================== LLM配置 (智谱AI) ====================
+    ZHIPU_API_KEY: str = "8102be46cfd84a12a527b9e8dd664a7b.9FgtFSd414I49j6F"
+    ZHIPU_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
     LLM_MODEL_ID: str = "glm-4"
-    LLM_API_KEY: str = ""
+    
+    # 兼容Agno/OpenAI SDK的配置
+    LLM_API_KEY: str = "8102be46cfd84a12a527b9e8dd664a7b.9FgtFSd414I49j6F" 
     LLM_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
-    LLM_TEMPERATURE: float = 0.1
-    LLM_MAX_TOKENS: int = 2000
     
-    # ==================== 丰图科技API配置 ====================
-    FENGTU_API_KEY: str = ""
-    FENGTU_BASE_URL: str = "https://api.fengtu.com"
-    
-    # 丰图API端点
-    FENGTU_SEGMENT_ENDPOINT: str = "/v1/address/segment"       # 18级分词
-    FENGTU_GEOCODE_ENDPOINT: str = "/v1/geocode/geo"           # 正向地理编码
-    FENGTU_REGEOCODE_ENDPOINT: str = "/v1/geocode/regeo"       # 逆向地理编码
-    FENGTU_STANDARDIZE_ENDPOINT: str = "/v1/address/standard"  # 地址标准化
-    FENGTU_VERIFY_ENDPOINT: str = "/v1/address/verify"         # 真实性校验
-    FENGTU_SIMILARITY_ENDPOINT: str = "/v1/address/similarity" # 相似度计算
-    
-    # 丰图API超时配置
-    FENGTU_TIMEOUT: int = 30
-    FENGTU_MAX_RETRIES: int = 3
-    
-    # ==================== 向量数据库配置（Milvus）====================
-    MILVUS_HOST: str = "localhost"
-    MILVUS_PORT: int = 19530
-    MILVUS_USER: str = ""
-    MILVUS_PASSWORD: str = ""
-    MILVUS_COLLECTION_ADDRESS: str = "fengtu_address_standard"
-    MILVUS_COLLECTION_POI: str = "fengtu_poi"
-    MILVUS_DIMENSION: int = 768
-    
-    # ==================== Elasticsearch配置 ====================
-    ES_HOST: str = "localhost"
-    ES_PORT: int = 9200
-    ES_USER: str = ""
-    ES_PASSWORD: str = ""
-    ES_INDEX_ADDRESS: str = "address_inverted"
-    ES_INDEX_POI: str = "poi_inverted"
-    
-    # ==================== Embedding模型配置 ====================
+    # ==================== 丰图API配置 ====================
+    FENGTU_API_KEY: Optional[str] = None
+    FENGTU_BASE_URL: str = "https://api.fengmap.com" # Dummy default
+
+    # ==================== Embedding模型配置 (智谱AI) ====================
     EMBEDDING_MODEL_ID: str = "embedding-3-pro"
-    EMBEDDING_API_KEY: str = ""
+    EMBEDDING_API_KEY: str = "8102be46cfd84a12a527b9e8dd664a7b.9FgtFSd414I49j6F"
     EMBEDDING_BASE_URL: str = "https://open.bigmodel.cn/api/paas/v4"
-    EMBEDDING_DIMENSION: int = 1024
-    
-    # ==================== 数据库配置 ====================
+    EMBEDDING_DIMENSION: int = 2048 # embedding-3-pro dimension
+
+    # ==================== 向量数据库配置 (LanceDB) ====================
+    LANCEDB_URI: str = "./data/lancedb_store"
+    KB_TABLE_NAME_AOI: str = "aoi_knowledge"
+    KB_TABLE_NAME_VILLAGE: str = "village_knowledge"
     SQLITE_DB_FILE: str = "./data/agents.db"
-    LANCEDB_URI: str = "./data/lancedb"
-    LANCEDB_BOOTSTRAP_ENABLED: bool = True
     
     # ==================== RAG配置 ====================
     RAG_TOP_K: int = 10
